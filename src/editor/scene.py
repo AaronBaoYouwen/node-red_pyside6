@@ -7,9 +7,9 @@ import json
 
 # 场景主题设置
 SCENE_COLORS = {
-    'background': QColor(53, 53, 53),  # 深色背景
-    'grid': QColor(60, 60, 60),  # 次要网格线
-    'grid_main': QColor(80, 80, 80),  # 主网格线
+    'background': QColor(255, 255, 255),  # 白色背景
+    'grid': QColor(240, 240, 240),       # 浅灰色次要网格线
+    'grid_main': QColor(220, 220, 220),  # 中灰色主网格线
 }
 
 class NodeScene(QGraphicsScene):
@@ -110,27 +110,13 @@ class NodeScene(QGraphicsScene):
         self.addItem(node)
         
         if pos:
-            # 计算节点中心点的偏移
-            node_rect = node.boundingRect()
-            offset_x = node_rect.width() / 2
-            offset_y = node_rect.height() / 2
-            
-            # 确保pos是QPointF类型并应用偏移
+            # 确保pos是QPointF类型
             if not isinstance(pos, QPointF):
                 pos = QPointF(pos)
             
-            # 应用偏移，使节点中心对齐到鼠标位置
-            final_pos = QPointF(pos.x() - offset_x, pos.y() - offset_y)
-            
-            # 设置节点位置
-            node.setPos(final_pos)
-            
-            # 更新场景
-            node.update()
-            self.update()
-            node.update()
-            self.update()
-            
+            # 直接设置节点位置到鼠标位置
+            node.setPos(pos)
+        
         return node
         
     def create_connection(self, start_node, end_node, start_port, end_port):

@@ -1,7 +1,8 @@
 from PySide6.QtWidgets import (QDockWidget, QListWidget, QListWidgetItem, 
                              QApplication, QWidget, QVBoxLayout)
-from PySide6.QtCore import Signal, Qt, QMimeData, QSize, QRect
-from PySide6.QtGui import QDrag, QPainter, QPen, QColor, QBrush, QPainterPath
+from PySide6.QtCore import Signal, Qt, QMimeData, QSize, QRect, QRectF, QPoint
+from PySide6.QtGui import (QDrag, QPainter, QPen, QColor, QBrush, QPainterPath,
+                          QPixmap)
 from .node_list_item import NodeListItem
 
 # 暗色主题颜色
@@ -28,7 +29,7 @@ class NodePalette(QDockWidget):
         self.list_widget = QListWidget()
         self.list_widget.setSpacing(4)  # 设置项之间的间距
         self.list_widget.setViewMode(QListWidget.IconMode)
-        self.list_widget.setIconSize(QSize(120, 80))
+        self.list_widget.setIconSize(QSize(140, 60))  # 修改高度为60
         self.list_widget.setMovement(QListWidget.Static)
         self.list_widget.setResizeMode(QListWidget.Adjust)
         self.list_widget.setDragEnabled(True)
@@ -38,12 +39,13 @@ class NodePalette(QDockWidget):
         # 设置样式
         self.list_widget.setStyleSheet("""
             QListWidget {
-                background-color: #2B2B2B;
+                background-color: transparent;
                 border: none;
                 padding: 5px;
             }
             QListWidget::item {
                 background-color: transparent;
+                border: none;
             }
         """)
         
@@ -57,7 +59,7 @@ class NodePalette(QDockWidget):
         for node_type, color in node_types.items():
             # 创建列表项
             item = QListWidgetItem(self.list_widget)
-            item.setSizeHint(QSize(120, 80))
+            item.setSizeHint(QSize(140, 60))  # 修改高度为60
             
             # 创建自定义部件
             widget = NodeListItem(node_type, color)
@@ -103,10 +105,40 @@ class NodePalette(QDockWidget):
         drag.setMimeData(mime_data)
         
         # 创建拖拽预览图像
-        pixmap = widget.grab()
-        scaled_pixmap = pixmap.scaled(80, 60, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        drag.setPixmap(scaled_pixmap)
-        drag.setHotSpot(scaled_pixmap.rect().center())  # 设置热点为中心
+        pixmap = QPixmap(140, 60)
+        pixmap.fill(Qt.transparent)  # 使背景透明
+        
+        # 在透明背景上绘制节点
+        painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.Antialiasing)
+        
+        # 绘制节点形状
+        path = QPainterPath()
+        node_rect = QRectF(5, 5, pixmap.width() - 10, pixmap.height() - 10)
+        path.addRoundedRect(node_rect, 12, 12)
+        
+        # 填充节点颜色
+        painter.fillPath(path, widget.color)
+        
+        # 绘制边框
+        pen = QPen(QColor('#777777'))
+        pen.setWidth(1)
+        painter.setPen(pen)
+        painter.drawPath(path)
+        
+        # 绘制文字
+        painter.setPen(QPen(Qt.white))
+        font = painter.font()
+        font.setPointSize(9)
+        font.setBold(True)
+        painter.setFont(font)
+        painter.drawText(node_rect.toRect(), Qt.AlignCenter, widget.node_type)
+        
+        painter.end()
+        
+        drag.setPixmap(pixmap)
+        # 设置热点为左上角，这样放置时会与鼠标位置对齐
+        drag.setHotSpot(QPoint(0, 0))
         
         # 执行拖拽
         result = drag.exec_(Qt.CopyAction)

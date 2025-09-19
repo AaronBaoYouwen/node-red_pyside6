@@ -5,38 +5,42 @@ from PySide6.QtGui import QPainter, QPen, QBrush, QColor, QLinearGradient
 # 节点主题颜色
 NODE_COLORS = {
     'Input': {
-        'bg': QColor('#2A3F1D'),        # 深绿色背景
-        'bg_selected': QColor('#3A5F2D'), # 选中时的深绿色
-        'border': QColor('#4A7023'),     # 边框绿色
-        'text': QColor('#CCCCCC')        # 文字颜色
+        'bg': QColor('#4A7023'),         # 深绿色背景
+        'bg_selected': QColor('#5A8033'), # 选中时的绿色
+        'border': QColor('#6A9043'),     # 边框绿色
+        'text': QColor('#FFFFFF')        # 白色文字
     },
     'Output': {
-        'bg': QColor('#3F231D'),        # 深橙色背景
-        'bg_selected': QColor('#5F332D'), # 选中时的深橙色
-        'border': QColor('#763F23'),     # 边框橙色
-        'text': QColor('#CCCCCC')        # 文字颜色
+        'bg': QColor('#763F23'),         # 深橙色背景
+        'bg_selected': QColor('#864F33'), # 选中时的橙色
+        'border': QColor('#965F43'),     # 边框橙色
+        'text': QColor('#FFFFFF')        # 白色文字
     },
     'Process': {
-        'bg': QColor('#1D233F'),        # 深蓝色背景
-        'bg_selected': QColor('#2D335F'), # 选中时的深蓝色
-        'border': QColor('#234176'),     # 边框蓝色
-        'text': QColor('#CCCCCC')        # 文字颜色
+        'bg': QColor('#234176'),         # 深蓝色背景
+        'bg_selected': QColor('#335186'), # 选中时的蓝色
+        'border': QColor('#436196'),     # 边框蓝色
+        'text': QColor('#FFFFFF')        # 白色文字
     },
     'default': {
-        'bg': QColor('#2D2D2D'),        # 默认深灰色背景
-        'bg_selected': QColor('#3D3D3D'), # 选中时的深灰色
+        'bg': QColor('#3C3F41'),         # 暗灰色背景
+        'bg_selected': QColor('#4C4F51'), # 选中时的灰色
         'border': QColor('#555555'),     # 边框灰色
-        'text': QColor('#CCCCCC')        # 文字颜色
+        'text': QColor('#CCCCCC')        # 浅灰色文字
     }
 }
 import json
 
 class Node(QGraphicsItem):
+    PORT_SIZE = 10  # 增大端口大小
+    PORT_OFFSET = PORT_SIZE / 2  # 端口偏移量
+    PORT_CLICK_RANGE = 15  # 增大端口点击检测范围
+    
     def __init__(self, title="Node", parent=None):
         super().__init__(parent)
         self.title = title
-        self.width = 150
-        self.height = 100
+        self.width = 140  # 保持宽度
+        self.height = 60  # 修改高度为60
         self.ports_in = []         # 输入端口名称列表
         self.ports_out = []        # 输出端口名称列表
         self.port_types = {}       # 存储端口类型信息 {port_name: type_info}
@@ -91,35 +95,43 @@ class Node(QGraphicsItem):
         painter.setPen(pen)
         painter.setBrush(QBrush(gradient))
         
-        painter.drawRoundedRect(0, 0, self.width, self.height, 10, 10)
+        # 绘制更圆润的矩形
+        painter.drawRoundedRect(0, 0, self.width, self.height, 12, 12)  # 增加圆角半径
         
-        # 绘制标题
+        # 绘制标题（靠上对齐）
         painter.setPen(Qt.white)
-        painter.drawText(10, 25, self.title)
+        title_font = painter.font()
+        title_font.setPointSize(11)  # 设置更大的标题字体
+        title_font.setBold(True)
+        painter.setFont(title_font)
+        
+        # 创建完整的标题区域矩形（从顶部到底部）
+        title_rect = QRectF(0, 0, self.width, self.height)
+        
+        # 绘制标题文本（完全居中）
+        painter.drawText(title_rect, Qt.AlignCenter, self.title)
+        
+        # 计算中心线的y坐标
+        center_y = self.height / 2
         
         # 绘制输入输出端口
-        port_radius = 6
         for i, port in enumerate(self.ports_in):
-            x = 0
-            y = 40 + i * 20
+            port_pos = QPointF(0, center_y)  # 将端口放在左侧中心
             # 绘制端口高亮效果
             if self.isPortHighlighted(False, i):
                 painter.setBrush(QBrush(Qt.yellow))
             else:
                 painter.setBrush(QBrush(Qt.white))
-            painter.drawEllipse(QPointF(x, y), port_radius, port_radius)
-            painter.drawText(20, y + 5, port)
+            painter.drawEllipse(port_pos, self.PORT_SIZE/2, self.PORT_SIZE/2)
             
         for i, port in enumerate(self.ports_out):
-            x = self.width
-            y = 40 + i * 20
+            port_pos = QPointF(self.width, center_y)  # 将端口放在右侧中心
             # 绘制端口高亮效果
             if self.isPortHighlighted(True, i):
                 painter.setBrush(QBrush(Qt.yellow))
             else:
                 painter.setBrush(QBrush(Qt.white))
-            painter.drawEllipse(QPointF(x, y), port_radius, port_radius)
-            painter.drawText(self.width - 60, y + 5, port)
+            painter.drawEllipse(port_pos, self.PORT_SIZE/2, self.PORT_SIZE/2)
             
     def add_input_port(self, name, port_type="any"):
         """添加输入端口
@@ -147,7 +159,7 @@ class Node(QGraphicsItem):
         """获取端口的位置（场景坐标）"""
         # 节点本地坐标中的端口位置
         x = self.width if is_output else 0
-        y = 40 + index * 20
+        y = self.height / 2  # 总是在垂直中心
         
         # 获取节点在场景中的位置
         node_pos = self.scenePos()
@@ -158,19 +170,18 @@ class Node(QGraphicsItem):
     def get_port_at(self, pos):
         """获取指定位置的端口"""
         local_pos = self.mapFromScene(pos)
-        port_radius = 10  # 稍微增大检测范围
+        port_radius = self.PORT_CLICK_RANGE  # 使用更大的检测范围
+        center_y = self.height / 2
         
-        # 检查输入端口
-        for i, _ in enumerate(self.ports_in):
-            port_pos = QPointF(0, 40 + i * 20)
-            if (local_pos - port_pos).manhattanLength() < port_radius:
-                return (False, i)
+        # 检查输入端口（左侧中心）
+        port_pos = QPointF(0, center_y)
+        if (local_pos - port_pos).manhattanLength() < port_radius and len(self.ports_in) > 0:
+            return (False, 0)  # 只有一个输入端口
                 
-        # 检查输出端口
-        for i, _ in enumerate(self.ports_out):
-            port_pos = QPointF(self.width, 40 + i * 20)
-            if (local_pos - port_pos).manhattanLength() < port_radius:
-                return (True, i)
+        # 检查输出端口（右侧中心）
+        port_pos = QPointF(self.width, center_y)
+        if (local_pos - port_pos).manhattanLength() < port_radius and len(self.ports_out) > 0:
+            return (True, 0)  # 只有一个输出端口
                 
         return None
         

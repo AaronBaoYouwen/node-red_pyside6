@@ -4,11 +4,11 @@ from PySide6.QtCore import Qt, QPointF
 from PySide6.QtGui import QPainterPath, QPen, QPainter, QColor, QBrush
 
 CONNECTION_COLORS = {
-    'normal': QColor(200, 200, 200, 255),    # 明亮的灰白色
-    'hover': QColor(230, 230, 230, 255),     # 高亮白色
-    'selected': QColor(255, 255, 255, 255),  # 纯白色
-    'invalid': QColor(255, 100, 100, 255),   # 保持红色用于错误提示
-    'preview': QColor(160, 160, 160, 200)    # 暗灰色用于预览
+    'normal': QColor(158, 158, 158),         # 中灰色
+    'hover': QColor(97, 97, 97),             # 深灰色
+    'selected': QColor(33, 33, 33),          # 更深的灰色
+    'invalid': QColor(244, 67, 54),          # 错误提示红色
+    'preview': QColor(189, 189, 189)         # 浅灰色预览
 }
 
 class Connection(QGraphicsPathItem):
@@ -213,9 +213,11 @@ class Connection(QGraphicsPathItem):
             
             # 绘制主线条
             main_pen = QPen(color)
-            main_pen.setWidth(line_width)
-            main_pen.setCapStyle(Qt.RoundCap)
-            main_pen.setJoinStyle(Qt.RoundJoin)
+            main_pen.setWidth(3)  # 增加线条宽度为固定值3
+            main_pen.setCapStyle(Qt.RoundCap)  # 圆形线帽
+            main_pen.setJoinStyle(Qt.RoundJoin)  # 圆形连接
+            if self.isSelected():
+                main_pen.setWidth(4)  # 选中时线条更粗
             
             # 如果是预览状态,使用虚线样式
             if self.is_preview:

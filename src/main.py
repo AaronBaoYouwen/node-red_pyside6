@@ -36,7 +36,8 @@ class MainWindow(QMainWindow):
         self.scene.nodeSelected.connect(self.properties_panel.showNodeProperties)
         
         # 设置窗口大小
-        self.setGeometry(100, 100, 1200, 800)
+        #self.setGeometry(100, 100, 1200, 800)
+        self.showMaximized()
         
     def createNode(self, node_type):
         if node_type == "Input":

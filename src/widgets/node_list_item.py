@@ -8,24 +8,7 @@ class NodeListItem(QWidget):
         self.node_type = node_type
         self.color = color
         self.is_hovered = False
-        self.setFixedSize(120, 80)
-        
-        layout = QVBoxLayout()
-        layout.setContentsMargins(4, 4, 4, 4)
-        self.setLayout(layout)
-        
-        # 添加文本标签
-        self.label = QLabel(node_type)
-        self.label.setAlignment(Qt.AlignCenter)
-        self.label.setStyleSheet("""
-            QLabel {
-                color: #CCCCCC;
-                font-size: 12px;
-                font-weight: bold;
-                margin-top: 4px;
-            }
-        """)
-        layout.addWidget(self.label, alignment=Qt.AlignBottom)
+        self.setFixedSize(140, 60)  # 修改高度为60
         
     def enterEvent(self, event):
         self.is_hovered = True
@@ -39,17 +22,17 @@ class NodeListItem(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         
-        # 定义图标区域
-        rect = QRect(10, 5, self.width() - 20, self.height() - 30)
+        # 定义图标区域（使用整个widget区域）
+        rect = QRect(5, 5, self.width() - 10, self.height() - 10)
         
-        # 绘制背景
-        bg_color = QColor('#3C3F41') if not self.is_hovered else QColor('#4C4F51')
-        painter.fillRect(self.rect(), bg_color)
+        # 背景透明
+        painter.setBackground(Qt.transparent)
+        painter.eraseRect(self.rect())
         
         # 绘制节点图标
         path = QPainterPath()
-        node_rect = QRect(rect.x() + 10, rect.y() + 5, rect.width() - 20, rect.height() - 10)
-        path.addRoundedRect(node_rect, 8, 8)
+        node_rect = QRect(rect.x() + 5, rect.y() + 5, rect.width() - 10, rect.height() - 10)
+        path.addRoundedRect(node_rect, 12, 12)  # 增加圆角半径
         
         # 填充颜色
         painter.fillPath(path, self.color)
@@ -59,6 +42,14 @@ class NodeListItem(QWidget):
         pen.setWidth(1)
         painter.setPen(pen)
         painter.drawPath(path)
+        
+        # 绘制文字
+        painter.setPen(QPen(QColor('#FFFFFF')))
+        font = painter.font()
+        font.setPointSize(9)
+        font.setBold(True)
+        painter.setFont(font)
+        painter.drawText(node_rect, Qt.AlignCenter, self.node_type)
         
         # 根据节点类型添加特定的视觉元素
         if self.node_type == "Input":
