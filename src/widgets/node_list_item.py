@@ -1,0 +1,85 @@
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel
+from PySide6.QtCore import Qt, QSize, QRect
+from PySide6.QtGui import QPainter, QPen, QColor, QBrush, QPainterPath
+
+class NodeListItem(QWidget):
+    def __init__(self, node_type, color, parent=None):
+        super().__init__(parent)
+        self.node_type = node_type
+        self.color = color
+        self.is_hovered = False
+        self.setFixedSize(120, 80)
+        
+        layout = QVBoxLayout()
+        layout.setContentsMargins(4, 4, 4, 4)
+        self.setLayout(layout)
+        
+        # 添加文本标签
+        self.label = QLabel(node_type)
+        self.label.setAlignment(Qt.AlignCenter)
+        self.label.setStyleSheet("""
+            QLabel {
+                color: #CCCCCC;
+                font-size: 12px;
+                font-weight: bold;
+                margin-top: 4px;
+            }
+        """)
+        layout.addWidget(self.label, alignment=Qt.AlignBottom)
+        
+    def enterEvent(self, event):
+        self.is_hovered = True
+        self.update()
+        
+    def leaveEvent(self, event):
+        self.is_hovered = False
+        self.update()
+        
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        
+        # 定义图标区域
+        rect = QRect(10, 5, self.width() - 20, self.height() - 30)
+        
+        # 绘制背景
+        bg_color = QColor('#3C3F41') if not self.is_hovered else QColor('#4C4F51')
+        painter.fillRect(self.rect(), bg_color)
+        
+        # 绘制节点图标
+        path = QPainterPath()
+        node_rect = QRect(rect.x() + 10, rect.y() + 5, rect.width() - 20, rect.height() - 10)
+        path.addRoundedRect(node_rect, 8, 8)
+        
+        # 填充颜色
+        painter.fillPath(path, self.color)
+        
+        # 绘制边框
+        pen = QPen(QColor('#777777'))
+        pen.setWidth(1)
+        painter.setPen(pen)
+        painter.drawPath(path)
+        
+        # 根据节点类型添加特定的视觉元素
+        if self.node_type == "Input":
+            # 绘制输出端口
+            self.draw_port(painter, node_rect.right(), node_rect.center().y(), True)
+        elif self.node_type == "Output":
+            # 绘制输入端口
+            self.draw_port(painter, node_rect.left(), node_rect.center().y(), False)
+        elif self.node_type == "Process":
+            # 绘制输入和输出端口
+            self.draw_port(painter, node_rect.left(), node_rect.center().y(), False)
+            self.draw_port(painter, node_rect.right(), node_rect.center().y(), True)
+            
+    def draw_port(self, painter, x, y, is_output):
+        """绘制端口"""
+        port_size = 8
+        port_rect = QRect(
+            x - port_size//2 if not is_output else x - port_size//2,
+            y - port_size//2,
+            port_size,
+            port_size
+        )
+        painter.setBrush(QBrush(QColor('#CCCCCC')))
+        painter.drawEllipse(port_rect)
